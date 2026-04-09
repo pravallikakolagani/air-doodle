@@ -1,8 +1,63 @@
 import cv2
 import numpy as np
 import os
+import time
 from hand_tracker import HandTracker
 from canvas import DrawingCanvas
+
+
+class VideoRecorder:
+    def __init__(self, width, height, fps=30):
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.writer = None
+        self.is_recording = False
+        self.frame_count = 0
+        self.output_path = None
+        
+    def start_recording(self, filename=None, timelapse=False):
+        if filename is None:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            filename = f"recording_{timestamp}.avi"
+        
+        self.output_path = os.path.join("saves", filename)
+        os.makedirs("saves", exist_ok=True)
+        
+        # Use XVID codec
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.writer = cv2.VideoWriter(self.output_path, fourcc, self.fps, (self.width, self.height))
+        self.is_recording = True
+        self.frame_count = 0
+        self.timelapse = timelapse
+        self.timelapse_counter = 0
+        print(f"Started recording: {self.output_path}")
+        return self.output_path
+    
+    def write_frame(self, frame):
+        if not self.is_recording or self.writer is None:
+            return
+        
+        if self.timelapse:
+            # For timelapse, only save every 5th frame
+            self.timelapse_counter += 1
+            if self.timelapse_counter % 5 != 0:
+                return
+        
+        self.writer.write(frame)
+        self.frame_count += 1
+    
+    def stop_recording(self):
+        if self.writer:
+            self.writer.release()
+            self.writer = None
+        self.is_recording = False
+        print(f"Recording saved: {self.output_path} ({self.frame_count} frames)")
+        return self.output_path
+    
+    def release(self):
+        if self.writer:
+            self.writer.release()
 
 
 def main():
@@ -18,6 +73,7 @@ def main():
     height, width = frame.shape[:2]
     hand_tracker = HandTracker()
     canvas = DrawingCanvas(width, height)
+    recorder = VideoRecorder(width, height, fps=30)
     
     colors = [
         (0, 255, 0),    # Green
@@ -42,17 +98,20 @@ def main():
     print("  - EXTEND INDEX FINGER ONLY to draw (single finger mode)")
     print("  - Or pinch thumb + index to draw (toggle with 'p')")
     print("  - Press 'c' to change color")
-    print("  - Press '+' to increase stroke width")
-    print("  - Press '-' to decrease stroke width")
+    print("  - Press '+' to increase stroke width, '-' to decrease")
     print("  - Press 'e' to toggle eraser mode")
     print("  - Press 'p' to toggle pinch/finger drawing mode")
+    print("  - Press 'b' to cycle background (blank/grid/lined)")
+    print("  - Press 'v' to toggle brush type (solid/spray)")
+    print("  - Press 'm' to toggle symmetry mode")
+    print("  - Press 'n' to toggle rainbow mode")
+    print("  - Press 'r' to start/stop recording")
+    print("  - Press 't' to start/stop timelapse recording")
     print("  - Press 'z' to undo, 'y' to redo")
     print("  - Press '1' circle, '2' rectangle, '3' line (shape tools)")
     print("  - Press '0' to exit shape mode")
-    print("  - Press 's' to save drawing")
-    print("  - Press 'l' to load drawing")
-    print("  - Press 'x' to clear canvas")
-    print("  - Press 'h' to toggle help")
+    print("  - Press 's' to save drawing, 'l' to load")
+    print("  - Press 'x' to clear canvas, 'h' to toggle help")
     print("  - Press 'q' or ESC to quit")
     
     while True:
@@ -144,6 +203,18 @@ def main():
         cv2.putText(display_frame, status_text, (width - 250, 40),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, status_color, 2)
         
+        # Recording indicator
+        if recorder.is_recording:
+            rec_text = "REC" if not recorder.timelapse else "TIMELAPSE"
+            rec_color = (0, 0, 255)  # Red
+            # Blink effect
+            if int(time.time() * 2) % 2 == 0:
+                cv2.circle(display_frame, (width - 50, 40), 8, rec_color, -1)
+            cv2.putText(display_frame, rec_text, (width - 140, 80),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, rec_color, 1)
+            # Write frame to recording
+            recorder.write_frame(display_frame)
+        
         cv2.imshow("Air Doodle", display_frame)
         
         key = cv2.waitKey(1) & 0xFF
@@ -193,7 +264,20 @@ def main():
             single_finger_mode = not single_finger_mode
             mode_name = "FINGER" if single_finger_mode else "PINCH"
             print(f"Drawing mode: {mode_name}")
+        elif key == ord('r'):
+            if recorder.is_recording:
+                recorder.stop_recording()
+            else:
+                recorder.start_recording(timelapse=False)
+        elif key == ord('t'):
+            if recorder.is_recording:
+                recorder.stop_recording()
+            else:
+                recorder.start_recording(timelapse=True)
     
+    if recorder.is_recording:
+        recorder.stop_recording()
+    recorder.release()
     hand_tracker.release()
     cap.release()
     cv2.destroyAllWindows()

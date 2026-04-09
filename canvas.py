@@ -28,6 +28,16 @@ class DrawingCanvas:
         self.smoothing_factor = 0.75
         self.min_draw_distance = 3
         
+        # New features
+        self.background_type = "blank"  # blank, grid, lined
+        self.brush_type = "solid"  # solid, spray
+        self.symmetry_mode = False
+        self.symmetry_axis = "vertical"  # vertical or horizontal
+        self.rainbow_mode = False
+        self.rainbow_hue = 0
+        self.spray_density = 50
+        self.spray_radius = 20
+        
     def save_state(self):
         if len(self.undo_stack) >= self.max_history:
             self.undo_stack.pop(0)
@@ -86,8 +96,20 @@ class DrawingCanvas:
                 color = (0, 0, 0) if self.mode == "eraser" else self.drawing_color
                 width = self.eraser_width if self.mode == "eraser" else self.stroke_width
                 
-                # Use LINE_AA for anti-aliased smoother lines
-                cv2.line(self.canvas, self.prev_point, smoothed, color, width, cv2.LINE_AA)
+                # Get color (rainbow mode overrides)
+                if self.rainbow_mode and self.mode == "draw":
+                    color = self._get_rainbow_color()
+                
+                # Draw based on brush type
+                if self.brush_type == "spray":
+                    self._draw_spray(smoothed, color)
+                else:
+                    cv2.line(self.canvas, self.prev_point, smoothed, color, width, cv2.LINE_AA)
+                
+                # Draw symmetry if enabled
+                if self.symmetry_mode:
+                    self._draw_symmetry(self.prev_point, smoothed, color, width)
+                
                 self.prev_point = smoothed
         else:
             self.prev_point = smoothed
@@ -146,14 +168,101 @@ class DrawingCanvas:
     def set_color(self, color):
         self.drawing_color = color
     
+    def set_background(self, bg_type):
+        """Set background: blank, grid, or lined"""
+        self.background_type = bg_type
+    
+    def set_brush_type(self, brush):
+        """Set brush: solid or spray"""
+        self.brush_type = brush
+    
+    def toggle_symmetry(self):
+        """Toggle symmetry mode on/off"""
+        self.symmetry_mode = not self.symmetry_mode
+        return self.symmetry_mode
+    
+    def toggle_rainbow_mode(self):
+        """Toggle rainbow color cycling"""
+        self.rainbow_mode = not self.rainbow_mode
+        return self.rainbow_mode
+    
+    def _get_rainbow_color(self):
+        """Get next color in rainbow cycle"""
+        import colorsys
+        self.rainbow_hue = (self.rainbow_hue + 5) % 360
+        rgb = colorsys.hsv_to_rgb(self.rainbow_hue / 360, 1.0, 1.0)
+        return (int(rgb[2] * 255), int(rgb[1] * 255), int(rgb[0] * 255))  # BGR format
+    
     def set_stroke_width(self, width):
         self.stroke_width = width
     
     def get_canvas(self):
         return self.canvas.copy()
     
+    def _draw_spray(self, point, color):
+        """Draw spray paint effect at point"""
+        for _ in range(self.spray_density):
+            # Random point within spray radius
+            angle = np.random.uniform(0, 2 * np.pi)
+            radius = np.random.uniform(0, self.spray_radius)
+            x = int(point[0] + radius * np.cos(angle))
+            y = int(point[1] + radius * np.sin(angle))
+            
+            # Check bounds
+            if 0 <= x < self.width and 0 <= y < self.height:
+                # Vary opacity based on distance from center
+                distance_ratio = radius / self.spray_radius
+                if np.random.random() > distance_ratio * 0.5:  # More dots near center
+                    cv2.circle(self.canvas, (x, y), 1, color, -1, cv2.LINE_AA)
+    
+    def _draw_symmetry(self, p1, p2, color, width):
+        """Draw mirrored line based on symmetry axis"""
+        if self.symmetry_axis == "vertical":
+            # Mirror across vertical center
+            center_x = self.width // 2
+            p1_mirror = (2 * center_x - p1[0], p1[1])
+            p2_mirror = (2 * center_x - p2[0], p2[1])
+        else:
+            # Mirror across horizontal center
+            center_y = self.height // 2
+            p1_mirror = (p1[0], 2 * center_y - p1[1])
+            p2_mirror = (p2[0], 2 * center_y - p2[1])
+        
+        if self.brush_type == "spray":
+            self._draw_spray(p2_mirror, color)
+        else:
+            cv2.line(self.canvas, p1_mirror, p2_mirror, color, width, cv2.LINE_AA)
+    
+    def get_background(self):
+        """Generate background image based on type"""
+        bg = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        
+        if self.background_type == "grid":
+            # Draw grid
+            grid_color = (40, 40, 40)
+            grid_spacing = 50
+            for x in range(0, self.width, grid_spacing):
+                cv2.line(bg, (x, 0), (x, self.height), grid_color, 1)
+            for y in range(0, self.height, grid_spacing):
+                cv2.line(bg, (0, y), (self.width, y), grid_color, 1)
+        
+        elif self.background_type == "lined":
+            # Draw lined paper
+            line_color = (50, 50, 80)
+            line_spacing = 40
+            for y in range(80, self.height, line_spacing):
+                cv2.line(bg, (0, y), (self.width, y), line_color, 1)
+            # Add margin line
+            cv2.line(bg, (60, 0), (60, self.height), (60, 60, 100), 2)
+        
+        return bg
+    
     def overlay_on_frame(self, frame, alpha=0.5):
-        return cv2.addWeighted(frame, 1, self.canvas, alpha, 0)
+        # Apply background
+        background = self.get_background()
+        # Combine background with canvas
+        combined = cv2.addWeighted(background, 0.3, self.canvas, 1, 0)
+        return cv2.addWeighted(frame, 1, combined, alpha, 0)
     
     def save_drawing(self, filepath=None):
         if filepath is None:
