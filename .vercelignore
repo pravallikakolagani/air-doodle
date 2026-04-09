@@ -1,0 +1,9 @@
+*.py
+requirements.txt
+*.txt
+*.task
+__pycache__/
+*.pyc
+saves/
+api/
+.git/
