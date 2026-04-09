@@ -285,3 +285,17 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# Vercel serverless function handler
+from http.server import BaseHTTPRequestHandler
+
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b"Air Doodle Web - Use streamlit run app.py for full functionality")
+    
+    def do_POST(self):
+        self.do_GET()
