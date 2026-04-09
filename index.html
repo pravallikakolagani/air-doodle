@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Doodle - Draw in the Air</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .tagline {
+            font-size: 1.3rem;
+            color: #aaa;
+        }
+        .demo-video {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature-card h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .cta {
+            text-align: center;
+            margin: 60px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            color: #1a1a2e;
+            padding: 18px 50px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,255,136,0.4);
+        }
+        .install-section {
+            background: rgba(0,0,0,0.3);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+        .install-section h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+        code {
+            display: block;
+            background: #0a0a1a;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .controls-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .control-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .key {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        a {
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✏️ Air Doodle</h1>
+            <p class="tagline">Draw in the air with your finger. No touch, no stylus, just magic.</p>
+        </header>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>🖐️ Hand Tracking</h3>
+                <p>Advanced AI-powered hand tracking. Just extend your index finger and draw in mid-air.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎨 Smart Brushes</h3>
+                <p>Solid lines, spray paint, rainbow colors, and symmetry mode for creative effects.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎬 Record & Replay</h3>
+                <p>Record your drawing sessions and play them back with our built-in player.</p>
+            </div>
+            <div class="feature-card">
+                <h3>⌨️ Full Control</h3>
+                <p>Undo/redo, shapes, backgrounds, and more - all controlled via simple keyboard shortcuts.</p>
+            </div>
+        </div>
+
+        <div class="install-section">
+            <h2>🚀 Quick Start</h2>
+            <code>
+# Clone the repository
+git clone https://github.com/pravallikakolagani/air-doodle.git
+cd air-doodle
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run Air Doodle
+python air_doodle.py
+            </code>
+        </div>
+
+        <div class="install-section">
+            <h2>🎮 Controls</h2>
+            <div class="controls-list">
+                <div class="control-item"><span class="key">Index Finger</span> - Draw</div>
+                <div class="control-item"><span class="key">c</span> - Change color</div>
+                <div class="control-item"><span class="key">+ / -</span> - Stroke width</div>
+                <div class="control-item"><span class="key">e</span> - Eraser mode</div>
+                <div class="control-item"><span class="key">b</span> - Background</div>
+                <div class="control-item"><span class="key">v</span> - Brush type</div>
+                <div class="control-item"><span class="key">m</span> - Symmetry</div>
+                <div class="control-item"><span class="key">n</span> - Rainbow mode</div>
+                <div class="control-item"><span class="key">r / t</span> - Recording / Timelapse</div>
+                <div class="control-item"><span class="key">z / y</span> - Undo / Redo</div>
+                <div class="control-item"><span class="key">1/2/3</span> - Shapes</div>
+                <div class="control-item"><span class="key">s / l</span> - Save / Load</div>
+            </div>
+        </div>
+
+        <div class="cta">
+            <a href="https://github.com/pravallikakolagani/air-doodle" class="btn">View on GitHub →</a>
+        </div>
+
+        <footer>
+            <p>Built with Python, OpenCV, and MediaPipe</p>
+            <p>Made with 💚 by <a href="https://github.com/pravallikakolagani">@pravallikakolagani</a></p>
+        </footer>
+    </div>
+</body>
+</html>
